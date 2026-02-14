@@ -1,28 +1,56 @@
-import { BrowserRouter,Routes,Route } from "react-router-dom"
+import { Navigate, Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
 
-import DashboardPage from "./pages/DashboardPage";
-import UserPage from "./pages/UsersPage";
-import TaskPage from "./pages/TasksPage";
-import EditTaskPage from "./pages/EditTaskPage";
-import TaskDetailPage from "./pages/TaskDetailPage";
-function App() {
-  return (
-    <BrowserRouter>
-    <Navbar />
-    <div className="container mt-4">
-      <Routes>
-        <Route path="/" element={<DashboardPage />} />
-        <Route path="/users" element={<UserPage />} />
-        <Route path="/tasks" element={<TaskPage />} />
-        <Route path="/task/:id" element={<TaskDetailPage />} />
-        <Route path="/edit-task/:id" element={<EditTaskPage />} />
-      </Routes>
-    </div>
-    </BrowserRouter>
-  );
+import ProtectedRoute from "./routes/ProtectedRoute";
+import AdminRoute from "./routes/AdminRoute";
+
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import TasksList from "./pages/TasksList";
+import TaskCreate from "./pages/TaskCreate";
+import TaskDetails from "./pages/TaskDetails";
+import TaskEdit from "./pages/TaskEdit";
+import Users from "./pages/Users";
+import NotFound from "./pages/NotFound";
+
+import { useAuth } from "./context/AuthContext";
+
+function HomeRedirect() {
+  const { isAuthenticated } = useAuth();
+  return <Navigate to={isAuthenticated ? "/tasks" : "/login"} replace />;
 }
 
-export default App;
+export default function App() {
+  return (
+    <>
+      <Navbar />
+      <div className="container my-4">
+        <Routes>
+          {/* Public */}
+          <Route path="/" element={<HomeRedirect />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-    
+          {/* NotFound explicit */}
+          <Route path="/not-found" element={<NotFound />} />
+
+          {/* Protected */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/tasks" element={<TasksList />} />
+            <Route path="/tasks/create" element={<TaskCreate />} />
+            <Route path="/tasks/:id" element={<TaskDetails />} />
+            <Route path="/tasks/:id/edit" element={<TaskEdit />} />
+
+            {/* Admin-only */}
+            <Route element={<AdminRoute />}>
+              <Route path="/users" element={<Users />} />
+            </Route>
+          </Route>
+
+          {/* Wildcard */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </div>
+    </>
+  );
+};
